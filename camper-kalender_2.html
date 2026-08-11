@@ -212,6 +212,7 @@ const T = {
 
 /* taal bepalen: ?lang= , anders browsertaal, anders nl */
 function detectLang(){
+  try{ var fl=window.frameElement && window.frameElement.getAttribute('data-lang'); if(fl){ fl=fl.toLowerCase().slice(0,2); if(T[fl]) return fl; } }catch(e){}
   var q=(new URLSearchParams(location.search)).get('lang');
   if(q){ q=q.toLowerCase().slice(0,2); if(T[q]) return q; }
   var b=(navigator.language||'nl').toLowerCase().slice(0,2);
@@ -362,8 +363,13 @@ document.getElementById("payBtn").onclick=async ()=>{
   const btn=document.getElementById("payBtn"); const oud=btn.textContent;
   btn.disabled=true; btn.textContent=L().sending;
   try{
-    const res=await fetch(CONFIG.webhookUrl,{ method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ aankomst:iso(checkIn), nachten:n, voornaam, achternaam, naam, email, telefoon:"", personen, taal:lang, nieuwsbrief:document.getElementById("gOptin").checked }) });
+    const params=new URLSearchParams();
+    params.set("aankomst", iso(checkIn)); params.set("nachten", String(n));
+    params.set("voornaam", voornaam); params.set("achternaam", achternaam);
+    params.set("naam", naam); params.set("email", email); params.set("telefoon", "");
+    params.set("personen", String(persons)); params.set("taal", lang);
+    params.set("nieuwsbrief", document.getElementById("gOptin").checked ? "1" : "0");
+    const res=await fetch(CONFIG.webhookUrl,{ method:"POST", body:params });
     const data=await res.json().catch(()=>({}));
     if(data && data.checkoutUrl){ (window.top && window.top!==window ? window.top : window).location.href=data.checkoutUrl; return; }
     if(data && data.error==="vol"){ setPrompt(L().errFull,true); } else { setPrompt(L().errPay,true); }
