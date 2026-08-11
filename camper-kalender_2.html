@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bus Whisky · Camperplaats reserveren</title>
+<style>
+  :root{
+    --green:#1c1c1c; --green-dark:#000000; --green-soft:#ededed;
+    --cream:#f7f4ec; --amber:#d98a2b; --ink:#2b2b28; --muted:#7a7a70;
+    --line:#e2ddd0; --white:#ffffff; --shadow:0 6px 24px rgba(44,82,40,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--cream);color:var(--ink);line-height:1.5;padding:24px 16px}
+  .wrap{max-width:920px;margin:0 auto}
+  .card{background:var(--white);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+  .head{background:var(--green);color:#fff;padding:22px 26px;position:relative}
+  .head h1{font-size:20px;font-weight:650;letter-spacing:.2px}
+  .head p{font-size:14px;opacity:.9;margin-top:4px;max-width:80%}
+  .langs{position:absolute;top:18px;right:22px;display:flex;gap:4px}
+  .langs button{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;font-weight:600;padding:4px 8px;border-radius:7px;cursor:pointer;font-family:inherit}
+  .langs button.active{background:#fff;color:#1c1c1c;border-color:#fff}
+  .body{display:grid;grid-template-columns:1fr 320px;gap:0}
+  @media (max-width:760px){.body{grid-template-columns:1fr}}
+  .cal{padding:22px 26px;border-right:1px solid var(--line)}
+  @media (max-width:760px){.cal{border-right:none;border-bottom:1px solid var(--line)}}
+  .prompt{font-size:13px;color:var(--green-dark);background:var(--green-soft);padding:8px 12px;border-radius:9px;margin-bottom:14px;text-align:center;font-weight:600}
+  .prompt.warn{background:#fbeee6;color:#c07b3d}
+  .calnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .calnav h2{font-size:16px;font-weight:600;text-transform:capitalize}
+  .navbtn{border:1px solid var(--line);background:#fff;width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:16px;color:var(--green-dark);display:flex;align-items:center;justify-content:center}
+  .navbtn:hover{background:var(--green-soft)}
+  .navbtn:disabled{opacity:.3;cursor:not-allowed}
+  .dow{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
+  .dow span{text-align:center;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .day{aspect-ratio:1/1;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;position:relative;transition:background .1s,border-color .1s;user-select:none}
+  .day:hover:not(.disabled):not(.busy){border-color:var(--green)}
+  .day.empty{border:none;background:transparent;cursor:default}
+  .day.disabled{color:#c7c2b6;background:#faf8f3;cursor:not-allowed}
+  .day.busy{color:#c07b3d;background:repeating-linear-gradient(45deg,#fbeee6,#fbeee6 4px,#f6e3d6 4px,#f6e3d6 8px);cursor:not-allowed;border-color:#f0d9c8}
+  .day.busy::after{content:attr(data-full);position:absolute;bottom:3px;font-size:8px;color:#c07b3d;letter-spacing:.3px}
+  .day.preview{background:var(--green-soft);border-color:var(--green-soft)}
+  .day.night{background:var(--green);color:#fff;border-color:var(--green-dark)}
+  .day.start{background:var(--green);color:#fff;border-color:var(--green-dark);font-weight:600}
+  .day.end{background:#fff;color:var(--green-dark);border:2px solid var(--green);font-weight:600}
+  .day.previewEnd{background:#fff;border:2px dashed var(--green);color:var(--green-dark)}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;font-size:12px;color:var(--muted)}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .side{padding:22px 24px;display:flex;flex-direction:column}
+  .side h3{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:12px}
+  .stay{background:var(--cream);border-radius:11px;padding:12px 14px;margin-bottom:6px}
+  .stay .line{display:flex;justify-content:space-between;align-items:center;font-size:14px;padding:3px 0}
+  .stay .line .lbl{color:var(--muted)}
+  .stay .line .val{font-weight:600}
+  .stay .nights-badge{text-align:center;margin-top:6px;font-size:13px;color:var(--green-dark);font-weight:600}
+  .stay .empty-msg{color:var(--muted);font-size:13px;font-style:italic;text-align:center;padding:6px 0}
+  .field{margin:10px 0}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:600}
+  .field input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit}
+  .field input:focus{outline:none;border-color:var(--green)}
+  .stepper{display:flex;align-items:center;gap:10px}
+  .stepper button{width:32px;height:32px;border:1px solid var(--line);background:#fff;border-radius:8px;font-size:17px;cursor:pointer;color:var(--green-dark)}
+  .stepper button:hover{background:var(--green-soft)}
+  .stepper span{font-size:15px;font-weight:600;min-width:22px;text-align:center}
+  .totals{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:14px}
+  .totals .row{display:flex;justify-content:space-between;margin:4px 0;color:var(--muted)}
+  .totals .grand{display:flex;justify-content:space-between;margin-top:8px;font-size:18px;font-weight:700;color:var(--ink)}
+  .pay{margin-top:16px;width:100%;background:var(--amber);color:#fff;border:none;padding:14px;border-radius:11px;font-size:15px;font-weight:650;cursor:pointer;transition:.12s}
+  .pay:hover{background:#c67c22}
+  .pay:disabled{background:#d8cdbb;cursor:not-allowed}
+  .reset{margin-top:8px;width:100%;background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline}
+  .hint{font-size:11px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.4}
+  .optin{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--ink);margin:8px 0 2px;cursor:pointer;line-height:1.35}
+  .optin input{margin-top:2px;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="head">
+      <div class="langs" id="langs">
+        <button data-lang="nl">NL</button>
+        <button data-lang="en">EN</button>
+        <button data-lang="de">DE</button>
+      </div>
+      <h1 id="title"></h1>
+      <p id="subtitle"></p>
+    </div>
+    <div class="body">
+      <div class="cal">
+        <div class="prompt" id="prompt"></div>
+        <div class="calnav">
+          <button class="navbtn" id="prev">‹</button>
+          <h2 id="monthLabel"></h2>
+          <button class="navbtn" id="next">›</button>
+        </div>
+        <div class="dow" id="dow"></div>
+        <div class="grid" id="grid"></div>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="side">
+        <h3 id="sideTitle"></h3>
+        <div class="stay" id="stayBox"></div>
+        <div class="field">
+          <label id="personsLabel"></label>
+          <div class="stepper">
+            <button id="pMinus">–</button><span id="pCount">2</span><button id="pPlus">+</button>
+          </div>
+        </div>
+        <div class="field">
+          <label id="nameLabel"></label>
+          <input type="text" id="gName">
+        </div>
+        <div class="field">
+          <label id="emailLabel"></label>
+          <input type="email" id="gMail">
+        </div>
+        <label class="optin"><input type="checkbox" id="gOptin" checked><span id="optinLabel"></span></label>
+        <div class="totals">
+          <div class="row"><span id="nightsCalc"></span><span id="stayTotal"></span></div>
+          <div class="row"><span id="taxCalc"></span><span id="taxTotal"></span></div>
+          <div class="row"><span id="powerLabel"></span><span>€0,00</span></div>
+          <div class="grand"><span id="totalLabel"></span><span id="grandTotal"></span></div>
+        </div>
+        <button class="pay" id="payBtn" disabled></button>
+        <button class="reset" id="resetBtn" style="display:none"></button>
+        <p class="hint" id="hint"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ====== INSTELLINGEN ====== */
+const CONFIG = {
+  pricePerNight: 13.50,
+  touristTaxPP: 2.50,
+  webhookUrl: "https://buswhiskyevents.app.n8n.cloud/webhook/camper-aanvraag",
+  busy: ["2026-08-15","2026-08-16","2026-08-23","2026-09-05"]
+};
+
+/* ====== VERTALINGEN ====== */
+const T = {
+  nl:{ locale:'nl-NL', dec:',',
+    title:'Camperplaats reserveren',
+    subtitle:'Kies je aankomst- en vertrekdatum — je betaalt in één keer voor alle nachten.',
+    dow:['ma','di','wo','do','vr','za','zo'], full:'vol',
+    promptStart:'Klik je <strong>aankomstdatum</strong> aan',
+    promptEnd:'Klik nu je <strong>vertrekdatum</strong> aan',
+    promptDone:'Verblijf gekozen ✓ — controleer rechts en reserveer',
+    warnVolArr:'Die nacht is <strong>vol</strong> — kies een andere aankomstdatum',
+    warnVolBetween:'Er zit een <strong>volle nacht</strong> tussen — kies een kortere periode',
+    legendNight:'Nacht (geboekt)', legendDep:'Vertrekdag', legendFull:'Vol',
+    sideTitle:'Jouw verblijf', noDates:'Nog geen datums gekozen', pickDeparture:'Kies nog je vertrekdatum',
+    arrival:'Aankomst', departure:'Vertrek', night:'nacht', nights:'nachten',
+    persons:'Aantal personen', nameLabel:'Naam', namePh:'Voor- en achternaam', emailLabel:'E-mailadres', emailPh:'jij@voorbeeld.nl', keepPosted:'Hou me op de hoogte van nieuws en aanbiedingen',
+    nightsCalc:function(n,p){return n+' '+(n===1?'nacht':'nachten')+' × '+p;},
+    tax:function(p){return 'Toeristenbelasting ('+p+' pers.)';}, power:'Stroom 6A', total:'Totaal',
+    payBtn:function(t){return 'Betaal '+t+' en reserveer';}, chooseFirst:'Kies eerst je datums', sending:'Bezig met doorsturen…', reset:'opnieuw kiezen',
+    hint:'Inclusief stroom (6A). Je kiest bij aankomst zelf een vrij plekje — we werken niet met vaste plaatsnummers. Eén betaling voor je hele verblijf; je ontvangt direct een bevestiging per e-mail. Tot 24 uur voor aankomst kun je kosteloos annuleren; daarna is de betaling verschuldigd.',
+    fillNameEmail:'Vul je <strong>naam en e-mailadres</strong> in om te reserveren',
+    errFull:'Helaas, een van je gekozen nachten is net volgeboekt. Kies een andere periode.',
+    errPay:'Er ging iets mis bij het starten van de betaling. Probeer het opnieuw.',
+    errConn:'Kon de betaling niet starten. Controleer je verbinding en probeer opnieuw.'
+  },
+  en:{ locale:'en-GB', dec:'.',
+    title:'Book your camper pitch',
+    subtitle:'Choose your arrival and departure date — you pay once for all nights.',
+    dow:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], full:'full',
+    promptStart:'Select your <strong>arrival date</strong>',
+    promptEnd:'Now select your <strong>departure date</strong>',
+    promptDone:'Stay selected ✓ — check the details and book',
+    warnVolArr:'That night is <strong>full</strong> — pick another arrival date',
+    warnVolBetween:'There is a <strong>full night</strong> in between — choose a shorter stay',
+    legendNight:'Night (booked)', legendDep:'Departure day', legendFull:'Full',
+    sideTitle:'Your stay', noDates:'No dates selected yet', pickDeparture:'Now pick your departure date',
+    arrival:'Arrival', departure:'Departure', night:'night', nights:'nights',
+    persons:'Number of guests', nameLabel:'Name', namePh:'First and last name', emailLabel:'Email', emailPh:'you@example.com', keepPosted:'Keep me posted on news and offers',
+    nightsCalc:function(n,p){return n+' '+(n===1?'night':'nights')+' × '+p;},
+    tax:function(p){return 'Tourist tax ('+p+' guests)';}, power:'Power 6A', total:'Total',
+    payBtn:function(t){return 'Pay '+t+' and book';}, chooseFirst:'Select your dates first', sending:'Redirecting…', reset:'start over',
+    hint:'Includes power (6A). You choose a free spot yourself on arrival — we do not use fixed pitch numbers. One payment for your whole stay; you will receive a confirmation by email right away. Free cancellation up to 24 hours before arrival; after that the payment is due.',
+    fillNameEmail:'Please enter your <strong>name and email</strong> to book',
+    errFull:'Sorry, one of your selected nights just sold out. Please choose another period.',
+    errPay:'Something went wrong starting the payment. Please try again.',
+    errConn:'Could not start the payment. Check your connection and try again.'
+  },
+  de:{ locale:'de-DE', dec:',',
+    title:'Wohnmobilstellplatz buchen',
+    subtitle:'Wähle dein Anreise- und Abreisedatum — du zahlst einmalig für alle Nächte.',
+    dow:['Mo','Di','Mi','Do','Fr','Sa','So'], full:'voll',
+    promptStart:'Wähle dein <strong>Anreisedatum</strong>',
+    promptEnd:'Wähle jetzt dein <strong>Abreisedatum</strong>',
+    promptDone:'Aufenthalt gewählt ✓ — prüfe die Angaben und buche',
+    warnVolArr:'Diese Nacht ist <strong>ausgebucht</strong> — wähle ein anderes Anreisedatum',
+    warnVolBetween:'Dazwischen liegt eine <strong>ausgebuchte Nacht</strong> — wähle einen kürzeren Zeitraum',
+    legendNight:'Nacht (gebucht)', legendDep:'Abreisetag', legendFull:'Ausgebucht',
+    sideTitle:'Dein Aufenthalt', noDates:'Noch keine Daten gewählt', pickDeparture:'Wähle noch dein Abreisedatum',
+    arrival:'Anreise', departure:'Abreise', night:'Nacht', nights:'Nächte',
+    persons:'Anzahl Personen', nameLabel:'Name', namePh:'Vor- und Nachname', emailLabel:'E-Mail', emailPh:'du@beispiel.de', keepPosted:'Halte mich über Neuigkeiten und Angebote auf dem Laufenden',
+    nightsCalc:function(n,p){return n+' '+(n===1?'Nacht':'Nächte')+' × '+p;},
+    tax:function(p){return 'Kurtaxe ('+p+' Pers.)';}, power:'Strom 6A', total:'Gesamt',
+    payBtn:function(t){return t+' bezahlen und buchen';}, chooseFirst:'Wähle zuerst deine Daten', sending:'Weiterleitung…', reset:'neu wählen',
+    hint:'Inklusive Strom (6A). Du wählst deinen freien Platz bei der Anreise selbst — wir haben keine festen Platznummern. Eine Zahlung für deinen ganzen Aufenthalt; du erhältst sofort eine Bestätigung per E-Mail. Kostenlose Stornierung bis 24 Stunden vor Anreise; danach ist die Zahlung fällig.',
+    fillNameEmail:'Bitte gib deinen <strong>Namen und deine E-Mail</strong> ein, um zu buchen',
+    errFull:'Leider ist eine deiner gewählten Nächte gerade ausgebucht. Bitte wähle einen anderen Zeitraum.',
+    errPay:'Beim Starten der Zahlung ist etwas schiefgegangen. Bitte versuche es erneut.',
+    errConn:'Zahlung konnte nicht gestartet werden. Prüfe deine Verbindung und versuche es erneut.'
+  }
+};
+
+/* taal bepalen: ?lang= , anders browsertaal, anders nl */
+function detectLang(){
+  var q=(new URLSearchParams(location.search)).get('lang');
+  if(q){ q=q.toLowerCase().slice(0,2); if(T[q]) return q; }
+  var b=(navigator.language||'nl').toLowerCase().slice(0,2);
+  return T[b]?b:'nl';
+}
+let lang=detectLang();
+function L(){ return T[lang]; }
+
+const today = new Date(2026,7,11); today.setHours(0,0,0,0);
+let view = new Date(today.getFullYear(), today.getMonth(), 1);
+let persons = 2, checkIn=null, checkOut=null, hoverDate=null, cells=[];
+
+const money = n => { var s=Number(n).toFixed(2).replace('.', L().dec); return '€'+s; };
+const iso = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const dLong = d => d.toLocaleDateString(L().locale,{weekday:"long",day:"numeric",month:"long"});
+const sameDay = (a,b) => a && b && a.getTime()===b.getTime();
+const addDays = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+const dayMs = 86400000;
+const nightsCount = (a,b) => a&&b ? Math.round((b-a)/dayMs) : 0;
+
+function rangeHasBusy(a,b){ for(let d=new Date(a); d<b; d=addDays(d,1)){ if(d<today) return true; if(CONFIG.busy.includes(iso(d))) return true; } return false; }
+
+function buildGrid(){
+  const cap = view.toLocaleDateString(L().locale,{month:"long",year:"numeric"});
+  document.getElementById("monthLabel").textContent = cap.charAt(0).toUpperCase()+cap.slice(1);
+  const grid=document.getElementById("grid"); grid.innerHTML=""; cells=[];
+  const first=new Date(view.getFullYear(), view.getMonth(), 1);
+  let lead=(first.getDay()+6)%7;
+  for(let i=0;i<lead;i++){ const e=document.createElement("div"); e.className="day empty"; grid.appendChild(e); cells.push({el:e,empty:true}); }
+  const days=new Date(view.getFullYear(), view.getMonth()+1, 0).getDate();
+  for(let d=1;d<=days;d++){
+    const date=new Date(view.getFullYear(), view.getMonth(), d);
+    const past=date<today, busy=CONFIG.busy.includes(iso(date));
+    const el=document.createElement("div"); el.className="day"; el.textContent=d; el.setAttribute("data-full",L().full);
+    const cell={el,date,past,busy};
+    if(!past){
+      el.addEventListener("click",()=>onDayClick(date,busy));
+      el.addEventListener("mouseenter",()=>{ if(checkIn&&!checkOut){ hoverDate=date; paintStates(); } });
+    }
+    grid.appendChild(el); cells.push(cell);
+  }
+  document.getElementById("prev").disabled=(view.getFullYear()===today.getFullYear() && view.getMonth()===today.getMonth());
+  paintStates();
+}
+
+function paintStates(){
+  const previewing = checkIn && !checkOut && hoverDate && hoverDate>checkIn && !rangeHasBusy(checkIn,hoverDate);
+  for(const c of cells){
+    if(c.empty){ c.el.className="day empty"; continue; }
+    const el=c.el, date=c.date; el.className="day";
+    if(c.past){ el.classList.add("disabled"); continue; }
+    let isEnd=false, isPrevEnd=false;
+    if(checkIn && checkOut){
+      if(date>=checkIn && date<checkOut) el.classList.add("night");
+      if(sameDay(date,checkIn)) el.classList.add("start");
+      if(sameDay(date,checkOut)){ el.classList.remove("night"); el.classList.add("end"); isEnd=true; }
+    } else if(previewing){
+      if(date>=checkIn && date<hoverDate) el.classList.add("preview");
+      if(sameDay(date,checkIn)) el.classList.add("start");
+      if(sameDay(date,hoverDate)){ el.classList.remove("preview"); el.classList.add("previewEnd"); isPrevEnd=true; }
+    } else if(checkIn && sameDay(date,checkIn)){ el.classList.add("start"); }
+    if(c.busy && !isEnd && !isPrevEnd) el.classList.add("busy");
+  }
+}
+
+function setPrompt(text,warn){ const p=document.getElementById("prompt"); p.innerHTML=text; p.classList.toggle("warn",!!warn); }
+
+function onDayClick(date,busy){
+  if(!checkIn || (checkIn && checkOut)){
+    if(busy){ setPrompt(L().warnVolArr,true); return; }
+    checkIn=date; checkOut=null; setPrompt(L().promptEnd);
+  } else {
+    if(date<=checkIn){
+      if(busy){ setPrompt(L().warnVolArr,true); checkIn=null; hoverDate=null; paintStates(); updateSide(); return; }
+      checkIn=date; checkOut=null; setPrompt(L().promptEnd);
+    } else if(rangeHasBusy(checkIn,date)){
+      setPrompt(L().warnVolBetween,true); checkIn=null; checkOut=null;
+    } else { checkOut=date; setPrompt(L().promptDone); }
+  }
+  hoverDate=null; paintStates(); updateSide();
+}
+
+function updateSide(){
+  const box=document.getElementById("stayBox"); const n=nightsCount(checkIn,checkOut);
+  if(checkIn && checkOut){
+    box.innerHTML='<div class="line"><span class="lbl">'+L().arrival+'</span><span class="val">'+dLong(checkIn)+'</span></div>'
+      +'<div class="line"><span class="lbl">'+L().departure+'</span><span class="val">'+dLong(checkOut)+'</span></div>'
+      +'<div class="nights-badge">'+n+' '+(n===1?L().night:L().nights)+'</div>';
+  } else if(checkIn){
+    box.innerHTML='<div class="line"><span class="lbl">'+L().arrival+'</span><span class="val">'+dLong(checkIn)+'</span></div><div class="empty-msg">'+L().pickDeparture+'</div>';
+  } else { box.innerHTML='<div class="empty-msg">'+L().noDates+'</div>'; }
+
+  const stay=n*CONFIG.pricePerNight, tax=n*persons*CONFIG.touristTaxPP;
+  document.getElementById("nightsCalc").textContent=L().nightsCalc(n, money(CONFIG.pricePerNight));
+  document.getElementById("stayTotal").textContent=money(stay);
+  document.getElementById("taxCalc").textContent=L().tax(persons);
+  document.getElementById("taxTotal").textContent=money(tax);
+  document.getElementById("grandTotal").textContent=money(stay+tax);
+
+  const btn=document.getElementById("payBtn"), reset=document.getElementById("resetBtn");
+  if(n>0){ btn.disabled=false; btn.textContent=L().payBtn(money(stay+tax)); reset.style.display="block"; }
+  else { btn.disabled=true; btn.textContent=L().chooseFirst; reset.style.display= checkIn?"block":"none"; }
+}
+
+function resetSelection(){ checkIn=null; checkOut=null; hoverDate=null; setPrompt(L().promptStart); paintStates(); updateSide(); }
+
+function applyLang(){
+  document.documentElement.lang=lang;
+  document.getElementById("title").textContent=L().title;
+  document.getElementById("subtitle").textContent=L().subtitle;
+  const dow=document.getElementById("dow"); dow.innerHTML=""; L().dow.forEach(function(d){ const s=document.createElement("span"); s.textContent=d; dow.appendChild(s); });
+  document.getElementById("legend").innerHTML=
+    '<span><i style="background:var(--green)"></i>'+L().legendNight+'</span>'
+    +'<span><i style="background:#fff;border:2px solid var(--green)"></i>'+L().legendDep+'</span>'
+    +'<span><i style="background:repeating-linear-gradient(45deg,#fbeee6,#fbeee6 3px,#f6e3d6 3px,#f6e3d6 6px)"></i>'+L().legendFull+'</span>';
+  document.getElementById("sideTitle").textContent=L().sideTitle;
+  document.getElementById("personsLabel").textContent=L().persons;
+  document.getElementById("nameLabel").textContent=L().nameLabel;
+  document.getElementById("gName").placeholder=L().namePh;
+  document.getElementById("emailLabel").textContent=L().emailLabel;
+  document.getElementById("gMail").placeholder=L().emailPh;
+  document.getElementById("optinLabel").textContent=L().keepPosted;
+  document.getElementById("powerLabel").textContent=L().power;
+  document.getElementById("totalLabel").textContent=L().total;
+  document.getElementById("hint").textContent=L().hint;
+  Array.prototype.forEach.call(document.querySelectorAll("#langs button"),function(b){ b.classList.toggle("active", b.getAttribute("data-lang")===lang); });
+  document.getElementById("resetBtn").textContent=L().reset;
+  if(!checkIn && !checkOut) setPrompt(L().promptStart);
+  else if(checkIn && !checkOut) setPrompt(L().promptEnd);
+  else setPrompt(L().promptDone);
+  buildGrid(); updateSide();
+}
+
+document.getElementById("prev").onclick=()=>{view.setMonth(view.getMonth()-1);buildGrid();};
+document.getElementById("next").onclick=()=>{view.setMonth(view.getMonth()+1);buildGrid();};
+document.getElementById("pMinus").onclick=()=>{if(persons>1){persons--;document.getElementById("pCount").textContent=persons;updateSide();}};
+document.getElementById("pPlus").onclick=()=>{if(persons<12){persons++;document.getElementById("pCount").textContent=persons;updateSide();}};
+document.getElementById("resetBtn").onclick=resetSelection;
+document.getElementById("grid").addEventListener("mouseleave",()=>{ if(checkIn&&!checkOut){hoverDate=null;paintStates();} });
+Array.prototype.forEach.call(document.querySelectorAll("#langs button"),function(b){ b.onclick=function(){ lang=b.getAttribute("data-lang"); applyLang(); }; });
+
+document.getElementById("payBtn").onclick=async ()=>{
+  const n=nightsCount(checkIn,checkOut); if(n<1) return;
+  const naam=document.getElementById("gName").value.trim();
+  const email=document.getElementById("gMail").value.trim();
+  if(!naam || email.indexOf("@")<1){ setPrompt(L().fillNameEmail,true); return; }
+  const delen=naam.split(/\s+/); const voornaam=delen.shift()||naam; const achternaam=delen.join(" ");
+  const btn=document.getElementById("payBtn"); const oud=btn.textContent;
+  btn.disabled=true; btn.textContent=L().sending;
+  try{
+    const res=await fetch(CONFIG.webhookUrl,{ method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ aankomst:iso(checkIn), nachten:n, voornaam, achternaam, naam, email, telefoon:"", personen, taal:lang, nieuwsbrief:document.getElementById("gOptin").checked }) });
+    const data=await res.json().catch(()=>({}));
+    if(data && data.checkoutUrl){ (window.top && window.top!==window ? window.top : window).location.href=data.checkoutUrl; return; }
+    if(data && data.error==="vol"){ setPrompt(L().errFull,true); } else { setPrompt(L().errPay,true); }
+    btn.disabled=false; btn.textContent=oud;
+  }catch(e){ setPrompt(L().errConn,true); btn.disabled=false; btn.textContent=oud; }
+};
+
+applyLang();
+</script>
+</body>
+</html>
