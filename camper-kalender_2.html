@@ -138,7 +138,8 @@ const CONFIG = {
   touristTaxPP: 2.50,
   webhookUrl: "https://buswhiskyevents.app.n8n.cloud/webhook/camper-aanvraag",
   wijzigUrl: "https://buswhiskyevents.app.n8n.cloud/webhook/camper-wijzigen",
-  busy: ["2026-08-15","2026-08-16","2026-08-23","2026-09-05"]
+  beschikbaarheidUrl: "https://buswhiskyevents.app.n8n.cloud/webhook/camper-beschikbaarheid",
+  busy: []
 };
 
 /* ====== VERTALINGEN ====== */
@@ -236,6 +237,7 @@ const WIJZIG={ on:(_WQ.get('wijzig')==='1' && !!_WQ.get('ref') && !!_WQ.get('tok
 const today = new Date(2026,7,11); today.setHours(0,0,0,0);
 let view = new Date(today.getFullYear(), today.getMonth(), 1);
 let persons = 2, checkIn=null, checkOut=null, hoverDate=null, cells=[];
+let BUSY = new Set(CONFIG.busy);
 
 const money = n => { var s=Number(n).toFixed(2).replace('.', L().dec); return '€'+s; };
 const iso = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -245,7 +247,21 @@ const addDays = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return
 const dayMs = 86400000;
 const nightsCount = (a,b) => a&&b ? Math.round((b-a)/dayMs) : 0;
 
-function rangeHasBusy(a,b){ for(let d=new Date(a); d<b; d=addDays(d,1)){ if(d<today) return true; if(CONFIG.busy.includes(iso(d))) return true; } return false; }
+function rangeHasBusy(a,b){ for(let d=new Date(a); d<b; d=addDays(d,1)){ if(d<today) return true; if(BUSY.has(iso(d))) return true; } return false; }
+
+async function loadAvailability(fromDate){
+  try{
+    var start = (fromDate && fromDate>today) ? new Date(fromDate) : new Date(today);
+    var van = iso(start);
+    var end = iso(addDays(start,42));
+    var res = await fetch(CONFIG.beschikbaarheidUrl+"?van="+van+"&dagen=42");
+    var data = await res.json().catch(function(){return {};});
+    var vol = (data && Array.isArray(data.vol)) ? data.vol : [];
+    Array.from(BUSY).forEach(function(d){ if(d>=van && d<end) BUSY.delete(d); });
+    vol.forEach(function(d){ BUSY.add(String(d).slice(0,10)); });
+    buildGrid();
+  }catch(e){ }
+}
 
 function buildGrid(){
   const cap = view.toLocaleDateString(L().locale,{month:"long",year:"numeric"});
@@ -257,7 +273,7 @@ function buildGrid(){
   const days=new Date(view.getFullYear(), view.getMonth()+1, 0).getDate();
   for(let d=1;d<=days;d++){
     const date=new Date(view.getFullYear(), view.getMonth(), d);
-    const past=date<today, busy=CONFIG.busy.includes(iso(date));
+    const past=date<today, busy=BUSY.has(iso(date));
     const el=document.createElement("div"); el.className="day"; el.textContent=d; el.setAttribute("data-full",L().full);
     const cell={el,date,past,busy};
     if(!past){
@@ -358,8 +374,8 @@ function applyLang(){
   buildGrid(); updateSide();
 }
 
-document.getElementById("prev").onclick=()=>{view.setMonth(view.getMonth()-1);buildGrid();};
-document.getElementById("next").onclick=()=>{view.setMonth(view.getMonth()+1);buildGrid();};
+document.getElementById("prev").onclick=()=>{view.setMonth(view.getMonth()-1);buildGrid();loadAvailability(view);};
+document.getElementById("next").onclick=()=>{view.setMonth(view.getMonth()+1);buildGrid();loadAvailability(view);};
 document.getElementById("pMinus").onclick=()=>{if(persons>1){persons--;document.getElementById("pCount").textContent=persons;updateSide();}};
 document.getElementById("pPlus").onclick=()=>{if(persons<12){persons++;document.getElementById("pCount").textContent=persons;updateSide();}};
 document.getElementById("resetBtn").onclick=resetSelection;
@@ -414,6 +430,7 @@ if(WIJZIG.on){
   var _op=document.querySelector('.optin'); if(_op) _op.style.display='none';
 }
 applyLang();
+loadAvailability(today);
 </script>
 </body>
 </html>
