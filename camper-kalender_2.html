@@ -17,7 +17,7 @@
   .head{background:var(--green);color:#fff;padding:22px 26px;position:relative}
   .head h1{font-size:20px;font-weight:650;letter-spacing:.2px}
   .head p{font-size:14px;opacity:.9;margin-top:4px;max-width:80%}
-  .langs{position:absolute;top:18px;right:22px;display:flex;gap:4px}
+  .langs{position:absolute;top:16px;right:54px;display:flex;gap:4px;z-index:3}
   .langs button{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;font-weight:600;padding:4px 8px;border-radius:7px;cursor:pointer;font-family:inherit}
   .langs button.active{background:#fff;color:#1c1c1c;border-color:#fff}
   .body{display:grid;grid-template-columns:1fr 320px;gap:0}
@@ -73,6 +73,7 @@
   .hint{font-size:11px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.4}
   .optin{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--ink);margin:8px 0 2px;cursor:pointer;line-height:1.35}
   .optin input{margin-top:2px;flex-shrink:0}
+  @media(max-width:560px){ .head{padding:20px 20px} .head h1{font-size:17px;padding-right:150px} .head p{font-size:13px;max-width:100%;margin-top:6px} .langs{top:14px;right:50px} .langs button{padding:3px 6px;font-size:11px} }
 </style>
 </head>
 <body>
