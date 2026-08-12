@@ -74,6 +74,7 @@
   .optin{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--ink);margin:8px 0 2px;cursor:pointer;line-height:1.35}
   .optin input{margin-top:2px;flex-shrink:0}
   @media(max-width:560px){ .head{padding:20px 20px} .head h1{font-size:17px;padding-right:150px} .head p{font-size:13px;max-width:100%;margin-top:6px} .langs{top:14px;right:50px} .langs button{padding:3px 6px;font-size:11px} }
+  body.embed{background:#fff;padding:0} body.embed .wrap{max-width:none} body.embed .card{border:none;border-radius:0;box-shadow:none} #cpClose{display:none} body.embed #cpClose{display:flex;position:absolute;top:14px;right:14px;z-index:4;width:32px;height:32px;align-items:center;justify-content:center;border:none;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;font-size:22px;line-height:1;cursor:pointer}
 </style>
 </head>
 <body>
@@ -430,6 +431,7 @@ if(WIJZIG.on){
   _hf('gName'); _hf('gMail');
   var _op=document.querySelector('.optin'); if(_op) _op.style.display='none';
 }
+try{var _emb=false;try{_emb=(window.self!==window.top);}catch(e){_emb=true;}if(new URLSearchParams(location.search).get('embed')==='1')_emb=true;if(_emb){document.body.classList.add('embed');var _h=document.querySelector('.head');if(_h){var _cb=document.createElement('button');_cb.type='button';_cb.id='cpClose';_cb.setAttribute('aria-label','Sluiten');_cb.innerHTML='&times;';_h.appendChild(_cb);_cb.addEventListener('click',function(){try{(window.parent||window).postMessage('camper-close','*');}catch(e){}});}}}catch(e){}
 applyLang();
 loadAvailability(today);
 </script>
