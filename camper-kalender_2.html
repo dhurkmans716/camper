@@ -148,13 +148,13 @@ const CONFIG = {
 const T = {
   nl:{ locale:'nl-NL', dec:',',
     title:'Camperplaats reserveren',
-    subtitle:'Kies je aankomst- en vertrekdatum — je betaalt in één keer voor alle nachten.',
+    subtitle:'Kies je aankomst- en vertrekdatum. Je betaalt in één keer voor alle nachten.',
     dow:['ma','di','wo','do','vr','za','zo'], full:'vol',
     promptStart:'Klik je <strong>aankomstdatum</strong> aan',
     promptEnd:'Klik nu je <strong>vertrekdatum</strong> aan',
-    promptDone:'Verblijf gekozen ✓ — controleer rechts en reserveer',
-    warnVolArr:'Die nacht is <strong>vol</strong> — kies een andere aankomstdatum',
-    warnVolBetween:'Er zit een <strong>volle nacht</strong> tussen — kies een kortere periode',
+    promptDone:'Verblijf gekozen ✓ Controleer rechts en reserveer',
+    warnVolArr:'Die nacht is <strong>vol</strong>, kies een andere aankomstdatum',
+    warnVolBetween:'Er zit een <strong>volle nacht</strong> tussen, kies een kortere periode',
     legendNight:'Nacht (geboekt)', legendDep:'Vertrekdag', legendFull:'Vol',
     sideTitle:'Jouw verblijf', noDates:'Nog geen datums gekozen', pickDeparture:'Kies nog je vertrekdatum',
     arrival:'Aankomst', departure:'Vertrek', night:'nacht', nights:'nachten',
@@ -162,24 +162,24 @@ const T = {
     nightsCalc:function(n,p){return n+' '+(n===1?'nacht':'nachten')+' × '+p;},
     tax:function(p){return 'Toeristenbelasting ('+p+' pers.)';}, power:'Stroom 6A', total:'Totaal',
     payBtn:function(t){return 'Betaal '+t+' en reserveer';}, chooseFirst:'Kies eerst je datums', sending:'Bezig met doorsturen…', reset:'opnieuw kiezen',
-    hint:'Inclusief stroom (6A). Je kiest bij aankomst zelf een vrij plekje — we werken niet met vaste plaatsnummers. Eén betaling voor je hele verblijf; je ontvangt direct een bevestiging per e-mail. Tot 24 uur voor aankomst kun je kosteloos annuleren; daarna is de betaling verschuldigd.',
+    hint:'Inclusief stroom (6A). Je kiest bij aankomst zelf een vrij plekje, we werken niet met vaste plaatsnummers. Eén betaling voor je hele verblijf; je ontvangt direct een bevestiging per e-mail. Tot 24 uur voor aankomst kun je kosteloos annuleren; daarna is de betaling verschuldigd.',
     fillNameEmail:'Vul je <strong>naam en e-mailadres</strong> in om te reserveren',
     errFull:'Helaas, een van je gekozen nachten is net volgeboekt. Kies een andere periode.',
     errPay:'Er ging iets mis bij het starten van de betaling. Probeer het opnieuw.',
     errConn:'Kon de betaling niet starten. Controleer je verbinding en probeer opnieuw.',
     wijzigBanner:'Je past een bestaande reservering aan. Kies je nieuwe aankomst- en vertrekdatum; het verschil wordt automatisch verrekend.',
     wijzigBtn:'Wijziging bevestigen',
-    errBijbetalen:'Voor méér nachten is bijbetalen nodig — neem even contact op via info@buswhisky.com, dan regelen we het.'
+    errBijbetalen:'Voor méér nachten is bijbetalen nodig. Neem even contact op via info@buswhisky.com, dan regelen we het.'
   },
   en:{ locale:'en-GB', dec:'.',
     title:'Book your camper pitch',
-    subtitle:'Choose your arrival and departure date — you pay once for all nights.',
+    subtitle:'Choose your arrival and departure date. You pay once for all nights.',
     dow:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], full:'full',
     promptStart:'Select your <strong>arrival date</strong>',
     promptEnd:'Now select your <strong>departure date</strong>',
-    promptDone:'Stay selected ✓ — check the details and book',
-    warnVolArr:'That night is <strong>full</strong> — pick another arrival date',
-    warnVolBetween:'There is a <strong>full night</strong> in between — choose a shorter stay',
+    promptDone:'Stay selected ✓ Check the details and book',
+    warnVolArr:'That night is <strong>full</strong>, pick another arrival date',
+    warnVolBetween:'There is a <strong>full night</strong> in between, choose a shorter stay',
     legendNight:'Night (booked)', legendDep:'Departure day', legendFull:'Full',
     sideTitle:'Your stay', noDates:'No dates selected yet', pickDeparture:'Now pick your departure date',
     arrival:'Arrival', departure:'Departure', night:'night', nights:'nights',
@@ -187,24 +187,24 @@ const T = {
     nightsCalc:function(n,p){return n+' '+(n===1?'night':'nights')+' × '+p;},
     tax:function(p){return 'Tourist tax ('+p+' guests)';}, power:'Power 6A', total:'Total',
     payBtn:function(t){return 'Pay '+t+' and book';}, chooseFirst:'Select your dates first', sending:'Redirecting…', reset:'start over',
-    hint:'Includes power (6A). You choose a free spot yourself on arrival — we do not use fixed pitch numbers. One payment for your whole stay; you will receive a confirmation by email right away. Free cancellation up to 24 hours before arrival; after that the payment is due.',
+    hint:'Includes power (6A). You choose a free spot yourself on arrival, we do not use fixed pitch numbers. One payment for your whole stay; you will receive a confirmation by email right away. Free cancellation up to 24 hours before arrival; after that the payment is due.',
     fillNameEmail:'Please enter your <strong>name and email</strong> to book',
     errFull:'Sorry, one of your selected nights just sold out. Please choose another period.',
     errPay:'Something went wrong starting the payment. Please try again.',
     errConn:'Could not start the payment. Check your connection and try again.',
     wijzigBanner:'You are changing an existing booking. Pick your new arrival and departure date; the difference is settled automatically.',
     wijzigBtn:'Confirm change',
-    errBijbetalen:'Adding more nights requires an extra payment — please contact us at info@buswhisky.com and we will arrange it.'
+    errBijbetalen:'Adding more nights requires an extra payment. Please contact us at info@buswhisky.com and we will arrange it.'
   },
   de:{ locale:'de-DE', dec:',',
     title:'Wohnmobilstellplatz buchen',
-    subtitle:'Wähle dein Anreise- und Abreisedatum — du zahlst einmalig für alle Nächte.',
+    subtitle:'Wähle dein Anreise- und Abreisedatum. Du zahlst einmalig für alle Nächte.',
     dow:['Mo','Di','Mi','Do','Fr','Sa','So'], full:'voll',
     promptStart:'Wähle dein <strong>Anreisedatum</strong>',
     promptEnd:'Wähle jetzt dein <strong>Abreisedatum</strong>',
-    promptDone:'Aufenthalt gewählt ✓ — prüfe die Angaben und buche',
-    warnVolArr:'Diese Nacht ist <strong>ausgebucht</strong> — wähle ein anderes Anreisedatum',
-    warnVolBetween:'Dazwischen liegt eine <strong>ausgebuchte Nacht</strong> — wähle einen kürzeren Zeitraum',
+    promptDone:'Aufenthalt gewählt ✓ Prüfe die Angaben und buche',
+    warnVolArr:'Diese Nacht ist <strong>ausgebucht</strong>, wähle ein anderes Anreisedatum',
+    warnVolBetween:'Dazwischen liegt eine <strong>ausgebuchte Nacht</strong>, wähle einen kürzeren Zeitraum',
     legendNight:'Nacht (gebucht)', legendDep:'Abreisetag', legendFull:'Ausgebucht',
     sideTitle:'Dein Aufenthalt', noDates:'Noch keine Daten gewählt', pickDeparture:'Wähle noch dein Abreisedatum',
     arrival:'Anreise', departure:'Abreise', night:'Nacht', nights:'Nächte',
@@ -212,14 +212,14 @@ const T = {
     nightsCalc:function(n,p){return n+' '+(n===1?'Nacht':'Nächte')+' × '+p;},
     tax:function(p){return 'Kurtaxe ('+p+' Pers.)';}, power:'Strom 6A', total:'Gesamt',
     payBtn:function(t){return t+' bezahlen und buchen';}, chooseFirst:'Wähle zuerst deine Daten', sending:'Weiterleitung…', reset:'neu wählen',
-    hint:'Inklusive Strom (6A). Du wählst deinen freien Platz bei der Anreise selbst — wir haben keine festen Platznummern. Eine Zahlung für deinen ganzen Aufenthalt; du erhältst sofort eine Bestätigung per E-Mail. Kostenlose Stornierung bis 24 Stunden vor Anreise; danach ist die Zahlung fällig.',
+    hint:'Inklusive Strom (6A). Du wählst deinen freien Platz bei der Anreise selbst, wir haben keine festen Platznummern. Eine Zahlung für deinen ganzen Aufenthalt; du erhältst sofort eine Bestätigung per E-Mail. Kostenlose Stornierung bis 24 Stunden vor Anreise; danach ist die Zahlung fällig.',
     fillNameEmail:'Bitte gib deinen <strong>Namen und deine E-Mail</strong> ein, um zu buchen',
     errFull:'Leider ist eine deiner gewählten Nächte gerade ausgebucht. Bitte wähle einen anderen Zeitraum.',
     errPay:'Beim Starten der Zahlung ist etwas schiefgegangen. Bitte versuche es erneut.',
     errConn:'Zahlung konnte nicht gestartet werden. Prüfe deine Verbindung und versuche es erneut.',
     wijzigBanner:'Du änderst eine bestehende Buchung. Wähle dein neues An- und Abreisedatum; die Differenz wird automatisch verrechnet.',
     wijzigBtn:'Änderung bestätigen',
-    errBijbetalen:'Für mehr Nächte ist eine Nachzahlung nötig — bitte kontaktiere uns unter info@buswhisky.com, dann regeln wir das.'
+    errBijbetalen:'Für mehr Nächte ist eine Nachzahlung nötig. Bitte kontaktiere uns unter info@buswhisky.com, dann regeln wir das.'
   }
 };
 
@@ -236,7 +236,7 @@ function L(){ return T[lang]; }
 const _WQ=new URLSearchParams(location.search);
 const WIJZIG={ on:(_WQ.get('wijzig')==='1' && !!_WQ.get('ref') && !!_WQ.get('token')), ref:_WQ.get('ref'), token:_WQ.get('token') };
 
-const today = new Date(2026,7,11); today.setHours(0,0,0,0);
+const today = new Date(); today.setHours(0,0,0,0);
 let view = new Date(today.getFullYear(), today.getMonth(), 1);
 let persons = 2, checkIn=null, checkOut=null, hoverDate=null, cells=[];
 let BUSY = new Set(CONFIG.busy);
