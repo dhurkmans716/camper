@@ -367,7 +367,7 @@ function applyLang(){
   document.getElementById("optinLabel").textContent=L().keepPosted;
   document.getElementById("powerLabel").textContent=L().power;
   document.getElementById("totalLabel").textContent=L().total;
-  document.getElementById("hint").textContent=L().hint;
+  var _lost={nl:"Bevestiging kwijt? Vraag 'm opnieuw op",en:"Lost your confirmation? Request it again",de:"Bestätigung verloren? Erneut anfordern"};document.getElementById("hint").innerHTML=L().hint+" <a href=\"https://buswhiskyevents.app.n8n.cloud/webhook/bevestiging-opnieuw?lang="+lang+"\" target=\"_blank\" rel=\"noopener\" style=\"color:#c07b3d;white-space:nowrap\">"+(_lost[lang]||_lost.nl)+"</a>";
   Array.prototype.forEach.call(document.querySelectorAll("#langs button"),function(b){ b.classList.toggle("active", b.getAttribute("data-lang")===lang); });
   document.getElementById("resetBtn").textContent=L().reset;
   if(!checkIn && !checkOut) setPrompt(L().promptStart);
