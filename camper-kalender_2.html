@@ -141,6 +141,7 @@ const CONFIG = {
   webhookUrl: "https://buswhiskyevents.app.n8n.cloud/webhook/camper-aanvraag",
   wijzigUrl: "https://buswhiskyevents.app.n8n.cloud/webhook/camper-wijzigen",
   beschikbaarheidUrl: "https://buswhiskyevents.app.n8n.cloud/webhook/camper-beschikbaarheid",
+  reserveringUrl: "https://buswhiskyevents.app.n8n.cloud/webhook/camper-reservering",
   busy: []
 };
 
@@ -168,6 +169,8 @@ const T = {
     errPay:'Er ging iets mis bij het starten van de betaling. Probeer het opnieuw.',
     errConn:'Kon de betaling niet starten. Controleer je verbinding en probeer opnieuw.',
     wijzigBanner:'Je past een bestaande reservering aan. Kies je nieuwe aankomst- en vertrekdatum; het verschil wordt automatisch verrekend.',
+    wijzigHuidig:function(a,v,n){return 'Je huidige reservering: <strong>'+a+'</strong> tot <strong>'+v+'</strong> ('+n+' '+(n===1?'nacht':'nachten')+'). Klik een nieuwe aankomstdatum aan en daarna je vertrekdatum. Wil je er nachten bij? Kies dan de hele nieuwe periode, dus ook de nachten die je al had.';},
+    errWijzig:'Deze wijziging lukte niet. Reply even op je bevestigingsmail, dan regelen we het voor je.',
     wijzigBtn:'Wijziging bevestigen',
     errBijbetalen:'Voor méér nachten is bijbetalen nodig. Neem even contact op via info@buswhisky.com, dan regelen we het.'
   },
@@ -193,6 +196,8 @@ const T = {
     errPay:'Something went wrong starting the payment. Please try again.',
     errConn:'Could not start the payment. Check your connection and try again.',
     wijzigBanner:'You are changing an existing booking. Pick your new arrival and departure date; the difference is settled automatically.',
+    wijzigHuidig:function(a,v,n){return 'Your current booking: <strong>'+a+'</strong> until <strong>'+v+'</strong> ('+n+' '+(n===1?'night':'nights')+'). Click your new arrival date and then your departure date. Adding nights? Select the whole new period, including the nights you already had.';},
+    errWijzig:'This change did not go through. Just reply to your confirmation email and we will sort it out for you.',
     wijzigBtn:'Confirm change',
     errBijbetalen:'Adding more nights requires an extra payment. Please contact us at info@buswhisky.com and we will arrange it.'
   },
@@ -216,6 +221,8 @@ const T = {
     fillNameEmail:'Bitte gib deinen <strong>Namen und deine E-Mail</strong> ein, um zu buchen',
     errFull:'Leider ist eine deiner gewählten Nächte gerade ausgebucht. Bitte wähle einen anderen Zeitraum.',
     errPay:'Beim Starten der Zahlung ist etwas schiefgegangen. Bitte versuche es erneut.',
+    wijzigHuidig:function(a,v,n){return 'Deine aktuelle Buchung: <strong>'+a+'</strong> bis <strong>'+v+'</strong> ('+n+' '+(n===1?'Nacht':'Nächte')+'). Klicke dein neues Anreisedatum und danach dein Abreisedatum an. Mehr Nächte? Wähle den kompletten neuen Zeitraum, also auch die Nächte, die du schon hattest.';},
+    errWijzig:'Diese Änderung hat nicht geklappt. Antworte einfach auf deine Bestätigungsmail, dann regeln wir das für dich.',
     errConn:'Zahlung konnte nicht gestartet werden. Prüfe deine Verbindung und versuche es erneut.',
     wijzigBanner:'Du änderst eine bestehende Buchung. Wähle dein neues An- und Abreisedatum; die Differenz wird automatisch verrechnet.',
     wijzigBtn:'Änderung bestätigen',
@@ -310,6 +317,27 @@ function paintStates(){
 
 function setPrompt(text,warn){ const p=document.getElementById("prompt"); p.innerHTML=text; p.classList.toggle("warn",!!warn); }
 
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function loadHuidige(){
+  try{
+    var url=CONFIG.reserveringUrl+'?ref='+encodeURIComponent(WIJZIG.ref)+'&token='+encodeURIComponent(WIJZIG.token);
+    var res=await fetch(url);
+    var data=await res.json().catch(function(){return {};});
+    if(!data || !data.gevonden || !data.aankomst || !data.nachten) return;
+    var n=Number(data.nachten)||0; if(n<1) return;
+    var pin=new Date(String(data.aankomst)+'T00:00:00'); if(isNaN(pin.getTime())) return;
+    var uit=addDays(pin,n);
+    persons=Number(data.personen)||persons;
+    var pc=document.getElementById('pCount'); if(pc) pc.textContent=String(persons);
+    view=new Date(pin.getFullYear(), pin.getMonth(), 1);
+    if(pin>=today){ checkIn=pin; checkOut=uit; }
+    await loadAvailability(pin>today?pin:today);
+    buildGrid(); updateSide();
+    setPrompt(L().wijzigHuidig(dLong(pin), dLong(uit), n));
+  }catch(e){ }
+}
+
 function onDayClick(date,busy){
   if(!checkIn || (checkIn && checkOut)){
     if(busy){ setPrompt(L().warnVolArr,true); return; }
@@ -401,7 +429,8 @@ document.getElementById("payBtn").onclick=async ()=>{
       if(data && data.checkoutUrl){ redirect(data.checkoutUrl); return; }
       if(data && data.error==="bijbetalen"){ setPrompt(data.bericht||L().errBijbetalen,true); }
       else if(data && data.error==="vol"){ setPrompt(L().errFull,true); }
-      else { setPrompt(L().errPay,true); }
+      else if(data && typeof data.error==="string" && data.error.length>3){ setPrompt(escHtml(data.error),true); }
+      else { setPrompt(L().errWijzig,true); }
       btn.disabled=false; btn.textContent=oud;
     }catch(e){ setPrompt(L().errConn,true); btn.disabled=false; btn.textContent=oud; }
     return;
@@ -434,6 +463,7 @@ if(WIJZIG.on){
 try{var _emb=false;try{_emb=(window.self!==window.top);}catch(e){_emb=true;}if(new URLSearchParams(location.search).get('embed')==='1')_emb=true;if(_emb){document.body.classList.add('embed');var _h=document.querySelector('.head');if(_h){var _cb=document.createElement('button');_cb.type='button';_cb.id='cpClose';_cb.setAttribute('aria-label','Sluiten');_cb.innerHTML='&times;';_h.appendChild(_cb);_cb.addEventListener('click',function(){try{(window.parent||window).postMessage('camper-close','*');}catch(e){}});}}}catch(e){}
 applyLang();
 loadAvailability(today);
+if(WIJZIG.on) loadHuidige();
 </script>
 </body>
 </html>
