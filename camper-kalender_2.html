@@ -73,6 +73,19 @@
   .hint{font-size:11px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.4}
   .optin{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--ink);margin:8px 0 2px;cursor:pointer;line-height:1.35}
   .optin input{margin-top:2px;flex-shrink:0}
+  .tour{margin:12px 0 2px;border:1px solid var(--line);border-radius:11px;padding:10px 12px;background:#fbf7ef}
+  .tour .optin{margin:0;font-weight:600}
+  .tprice{font-size:13px;margin:4px 0 0 22px;color:var(--ink)}
+  .tprice s{color:var(--muted);margin-right:4px}
+  .tprice strong{color:#c07b3d;font-size:14px}
+  .topts{margin-top:8px}
+  .topts select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit;background:#fff}
+  .ttimes{display:flex;gap:6px;flex-wrap:wrap}
+  .ttimes button{flex:1 1 0;min-width:84px;padding:8px 6px;border:1px solid var(--line);background:#fff;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--ink)}
+  .ttimes button.sel{background:var(--green);color:#fff;border-color:var(--green-dark)}
+  .ttimes button:disabled{color:#c7c2b6;background:#faf8f3;cursor:not-allowed;text-decoration:line-through}
+  .tmsg{font-size:12px;color:var(--muted);margin-top:4px}
+  .tnote{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.4}
   @media(max-width:560px){ .head{padding:20px 20px} .head h1{font-size:17px;padding-right:150px} .head p{font-size:13px;max-width:100%;margin-top:6px} .langs{top:14px;right:50px} .langs button{padding:3px 6px;font-size:11px} }
   body.embed{background:#fff;padding:0} body.embed .wrap{max-width:none} body.embed .card{border:none;border-radius:0;box-shadow:none} #cpClose{display:none} body.embed #cpClose{display:flex;position:absolute;top:14px;right:14px;z-index:4;width:32px;height:32px;align-items:center;justify-content:center;border:none;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;font-size:22px;line-height:1;cursor:pointer}
 </style>
@@ -119,10 +132,21 @@
           <input type="email" id="gMail">
         </div>
         <label class="optin"><input type="checkbox" id="gOptin" checked><span id="optinLabel"></span></label>
+        <div class="tour" id="tourBox">
+          <label class="optin"><input type="checkbox" id="tOpt"><span id="tourLabel"></span></label>
+          <div class="tprice"><s id="tNormal">€17,50</s> <strong id="tCamper">€8,75</strong> <span id="tPP"></span></div>
+          <div class="topts" id="tourOpts" hidden>
+            <div class="field"><label id="tDateLabel" for="tDate"></label><select id="tDate"></select></div>
+            <div class="field"><label id="tTimeLabel"></label><div class="ttimes" id="tTimes"></div><div class="tmsg" id="tMsg"></div></div>
+            <div class="field"><label id="tPaxLabel"></label><div class="stepper"><button id="tMinus" type="button">–</button><span id="tCount">2</span><button id="tPlus" type="button">+</button></div></div>
+            <p class="tnote" id="tNote"></p>
+          </div>
+        </div>
         <div class="totals">
           <div class="row"><span id="nightsCalc"></span><span id="stayTotal"></span></div>
           <div class="row"><span id="taxCalc"></span><span id="taxTotal"></span></div>
           <div class="row"><span id="powerLabel"></span><span>€0,00</span></div>
+          <div class="row" id="tourRow" style="display:none"><span id="tourCalc"></span><span id="tourTotal"></span></div>
           <div class="grand"><span id="totalLabel"></span><span id="grandTotal"></span></div>
         </div>
         <button class="pay" id="payBtn" disabled></button>
@@ -142,6 +166,9 @@ const CONFIG = {
   wijzigUrl: "https://buswhiskyevents.app.n8n.cloud/webhook/camper-wijzigen",
   beschikbaarheidUrl: "https://buswhiskyevents.app.n8n.cloud/webhook/camper-beschikbaarheid",
   reserveringUrl: "https://buswhiskyevents.app.n8n.cloud/webhook/camper-reservering",
+  /* 5 nov 2026: optionele rondleiding met 50% campergastkorting. De prijs wordt server-side vastgesteld; dit is alleen de weergave. */
+  tourUrl: "https://buswhiskyevents.app.n8n.cloud/webhook/bus-upsell-availability",
+  tourPrice: 17.50, tourCamperPrice: 8.75,
   busy: []
 };
 
@@ -172,7 +199,13 @@ const T = {
     wijzigHuidig:function(a,v,n){return 'Je huidige reservering: <strong>'+a+'</strong> tot <strong>'+v+'</strong> ('+n+' '+(n===1?'nacht':'nachten')+'). Klik een nieuwe aankomstdatum aan en daarna je vertrekdatum. Wil je er nachten bij? Kies dan de hele nieuwe periode, dus ook de nachten die je al had.';},
     errWijzig:'Deze wijziging lukte niet. Reply even op je bevestigingsmail, dan regelen we het voor je.',
     wijzigBtn:'Wijziging bevestigen',
-    errBijbetalen:'Voor méér nachten is bijbetalen nodig. Neem even contact op via info@buswhisky.com, dan regelen we het.'
+    errBijbetalen:'Voor méér nachten is bijbetalen nodig. Neem even contact op via info@buswhisky.com, dan regelen we het.',
+    tourLabel:'Ja, ik wil ook een rondleiding door de BUS Whiskystokerij reserveren met 50% campergastkorting.',
+    tourPP:'p.p. campergastprijs', tourDate:'Dag van de rondleiding', tourTime:'Tijd', tourPax:'Aantal deelnemers rondleiding',
+    tourNote:'De rondleiding betaal je vooraf, samen met je camperplaats in één betaling. Inclusief een glaasje om te proeven.',
+    tourPickDates:'Kies eerst je aankomst- en vertrekdatum.', tourLoading:'Beschikbare tijden ophalen…', tourNone:'Op deze dag is er geen rondleiding meer vrij. Kies een andere dag.', tourFull:'vol', tourErr:'Kon de tijden niet ophalen. Probeer het zo opnieuw.',
+    tourCalc:function(p,pr){return 'Rondleiding ('+p+' × '+pr+')';}, tourPickTime:'Kies een <strong>tijd voor de rondleiding</strong>, of zet het vinkje uit',
+    errTourFull:'Die rondleiding is net volgeboekt. Kies een andere tijd of dag, of zet het vinkje uit.'
   },
   en:{ locale:'en-GB', dec:'.',
     title:'Book your camper pitch',
@@ -199,7 +232,13 @@ const T = {
     wijzigHuidig:function(a,v,n){return 'Your current booking: <strong>'+a+'</strong> until <strong>'+v+'</strong> ('+n+' '+(n===1?'night':'nights')+'). Click your new arrival date and then your departure date. Adding nights? Select the whole new period, including the nights you already had.';},
     errWijzig:'This change did not go through. Just reply to your confirmation email and we will sort it out for you.',
     wijzigBtn:'Confirm change',
-    errBijbetalen:'Adding more nights requires an extra payment. Please contact us at info@buswhisky.com and we will arrange it.'
+    errBijbetalen:'Adding more nights requires an extra payment. Please contact us at info@buswhisky.com and we will arrange it.',
+    tourLabel:'Yes, I would also like to book a tour of the BUS Whisky distillery with a 50% camper guest discount.',
+    tourPP:'p.p. camper guest price', tourDate:'Day of the tour', tourTime:'Time', tourPax:'Number of tour participants',
+    tourNote:'The tour is paid in advance, together with your camper pitch in one payment. Includes a small glass to taste.',
+    tourPickDates:'Select your arrival and departure date first.', tourLoading:'Loading available times…', tourNone:'No tour available on this day any more. Please pick another day.', tourFull:'full', tourErr:'Could not load the times. Please try again shortly.',
+    tourCalc:function(p,pr){return 'Tour ('+p+' × '+pr+')';}, tourPickTime:'Pick a <strong>time for the tour</strong>, or untick the box',
+    errTourFull:'That tour has just sold out. Pick another time or day, or untick the box.'
   },
   de:{ locale:'de-DE', dec:',',
     title:'Wohnmobilstellplatz buchen',
@@ -226,7 +265,13 @@ const T = {
     errConn:'Zahlung konnte nicht gestartet werden. Prüfe deine Verbindung und versuche es erneut.',
     wijzigBanner:'Du änderst eine bestehende Buchung. Wähle dein neues An- und Abreisedatum; die Differenz wird automatisch verrechnet.',
     wijzigBtn:'Änderung bestätigen',
-    errBijbetalen:'Für mehr Nächte ist eine Nachzahlung nötig. Bitte kontaktiere uns unter info@buswhisky.com, dann regeln wir das.'
+    errBijbetalen:'Für mehr Nächte ist eine Nachzahlung nötig. Bitte kontaktiere uns unter info@buswhisky.com, dann regeln wir das.',
+    tourLabel:'Ja, ich möchte auch eine Führung durch die BUS Whiskybrennerei mit 50% Campergast-Rabatt reservieren.',
+    tourPP:'p.P. Campergast-Preis', tourDate:'Tag der Führung', tourTime:'Uhrzeit', tourPax:'Anzahl Teilnehmer Führung',
+    tourNote:'Die Führung wird im Voraus bezahlt, zusammen mit deinem Stellplatz in einer Zahlung. Inklusive einem kleinen Glas zum Probieren.',
+    tourPickDates:'Wähle zuerst dein An- und Abreisedatum.', tourLoading:'Verfügbare Zeiten werden geladen…', tourNone:'An diesem Tag ist keine Führung mehr frei. Bitte wähle einen anderen Tag.', tourFull:'voll', tourErr:'Die Zeiten konnten nicht geladen werden. Bitte versuche es gleich noch einmal.',
+    tourCalc:function(p,pr){return 'Führung ('+p+' × '+pr+')';}, tourPickTime:'Wähle eine <strong>Uhrzeit für die Führung</strong> oder entferne das Häkchen',
+    errTourFull:'Diese Führung ist gerade ausgebucht. Wähle eine andere Zeit oder einen anderen Tag, oder entferne das Häkchen.'
   }
 };
 
@@ -257,6 +302,57 @@ const dayMs = 86400000;
 const nightsCount = (a,b) => a&&b ? Math.round((b-a)/dayMs) : 0;
 
 function rangeHasBusy(a,b){ for(let d=new Date(a); d<b; d=addDays(d,1)){ if(d<today) return true; if(BUSY.has(iso(d))) return true; } return false; }
+
+/* ====== RONDLEIDING (5 nov 2026) ====== */
+const TOUR={ on:false, date:'', time:'', pax:2, paxTouched:false, slots:[], loading:false, err:false, req:0 };
+function tourDates(){ const out=[]; if(!(checkIn&&checkOut)) return out; for(let d=new Date(checkIn); d<=checkOut; d=addDays(d,1)){ out.push(new Date(d)); } return out; }
+function tourAmount(){ return (TOUR.on && TOUR.time) ? Math.round(TOUR.pax*CONFIG.tourCamperPrice*100)/100 : 0; }
+function renderTourDates(){
+  const sel=document.getElementById('tDate'); const ds=tourDates(); const keep=TOUR.date;
+  sel.innerHTML='';
+  ds.forEach(function(d){ const o=document.createElement('option'); o.value=iso(d); o.textContent=dLong(d); sel.appendChild(o); });
+  if(!ds.length){ TOUR.date=''; return; }
+  const ok=ds.some(function(d){ return iso(d)===keep; });
+  TOUR.date= ok ? keep : iso(ds[0]);
+  sel.value=TOUR.date;
+}
+function renderTourTimes(){
+  const box=document.getElementById('tTimes'), msg=document.getElementById('tMsg'); box.innerHTML='';
+  if(!(checkIn&&checkOut)){ msg.textContent=L().tourPickDates; return; }
+  if(TOUR.loading){ msg.textContent=L().tourLoading; return; }
+  if(TOUR.err){ msg.textContent=L().tourErr; return; }
+  const open=TOUR.slots.filter(function(s){ return s.available; });
+  msg.textContent= open.length ? '' : L().tourNone;
+  TOUR.slots.forEach(function(s){
+    const b=document.createElement('button'); b.type='button';
+    const t=lang==='en' ? (s.time==='14:30'?'2:30 pm':'4:00 pm') : s.time.replace(':','.');
+    b.textContent=s.available ? t : (t+' · '+L().tourFull);
+    b.disabled=!s.available; if(s.available && s.time===TOUR.time) b.classList.add('sel');
+    b.onclick=function(){ TOUR.time=s.time; renderTourTimes(); updateSide(); };
+    box.appendChild(b);
+  });
+}
+async function loadTourSlots(){
+  TOUR.slots=[]; TOUR.time=''; TOUR.err=false;
+  if(!TOUR.on || !TOUR.date){ renderTourTimes(); return; }
+  const my=++TOUR.req; TOUR.loading=true; renderTourTimes();
+  try{
+    const r=await fetch(CONFIG.tourUrl+'?kind=camper&date='+TOUR.date+'&pax='+TOUR.pax);
+    const d=await r.json().catch(function(){ return {}; });
+    if(my!==TOUR.req) return;
+    if(!d || d.ok!==true || !Array.isArray(d.tours)) throw new Error('x');
+    TOUR.slots=d.tours.map(function(x){ return { time:String(x.time||''), available:x.available===true }; }).filter(function(x){ return /^\d{2}:\d{2}$/.test(x.time); });
+    const first=TOUR.slots.find(function(x){ return x.available; }); TOUR.time=first?first.time:'';
+  }catch(e){ if(my!==TOUR.req) return; TOUR.err=true; }
+  TOUR.loading=false; renderTourTimes(); updateSide();
+}
+function refreshTour(){
+  const box=document.getElementById('tourOpts'); box.hidden=!TOUR.on;
+  if(!TOUR.paxTouched) TOUR.pax=persons;
+  document.getElementById('tCount').textContent=String(TOUR.pax);
+  if(!TOUR.on){ TOUR.time=''; updateSide(); return; }
+  renderTourDates(); loadTourSlots();
+}
 
 async function loadAvailability(fromDate){
   try{
@@ -351,6 +447,7 @@ function onDayClick(date,busy){
     } else { checkOut=date; setPrompt(L().promptDone); }
   }
   hoverDate=null; paintStates(); updateSide();
+  if(TOUR.on) refreshTour();
 }
 
 function updateSide(){
@@ -368,14 +465,18 @@ function updateSide(){
   document.getElementById("stayTotal").textContent=money(stay);
   document.getElementById("taxCalc").textContent=L().tax(persons);
   document.getElementById("taxTotal").textContent=money(tax);
-  document.getElementById("grandTotal").textContent=money(stay+tax);
+  const tourAmt=(n>0 && !WIJZIG.on)?tourAmount():0;
+  const tRow=document.getElementById("tourRow");
+  if(tourAmt>0){ tRow.style.display="flex"; document.getElementById("tourCalc").textContent=L().tourCalc(TOUR.pax, money(CONFIG.tourCamperPrice)); document.getElementById("tourTotal").textContent=money(tourAmt); }
+  else { tRow.style.display="none"; }
+  document.getElementById("grandTotal").textContent=money(stay+tax+tourAmt);
 
   const btn=document.getElementById("payBtn"), reset=document.getElementById("resetBtn");
-  if(n>0){ btn.disabled=false; btn.textContent=WIJZIG.on?L().wijzigBtn:L().payBtn(money(stay+tax)); reset.style.display="block"; }
+  if(n>0){ btn.disabled=false; btn.textContent=WIJZIG.on?L().wijzigBtn:L().payBtn(money(stay+tax+tourAmt)); reset.style.display="block"; }
   else { btn.disabled=true; btn.textContent=L().chooseFirst; reset.style.display= checkIn?"block":"none"; }
 }
 
-function resetSelection(){ checkIn=null; checkOut=null; hoverDate=null; setPrompt(L().promptStart); paintStates(); updateSide(); }
+function resetSelection(){ checkIn=null; checkOut=null; hoverDate=null; setPrompt(L().promptStart); paintStates(); updateSide(); if(TOUR.on) refreshTour(); }
 
 function applyLang(){
   document.documentElement.lang=lang;
@@ -398,6 +499,15 @@ function applyLang(){
   var _lost={nl:"Bevestiging kwijt? Vraag 'm opnieuw op",en:"Lost your confirmation? Request it again",de:"Bestätigung verloren? Erneut anfordern"};document.getElementById("hint").innerHTML=L().hint+" <a href=\"https://buswhiskyevents.app.n8n.cloud/webhook/bevestiging-opnieuw?lang="+lang+"\" target=\"_blank\" rel=\"noopener\" style=\"color:#c07b3d;white-space:nowrap\">"+(_lost[lang]||_lost.nl)+"</a>";
   Array.prototype.forEach.call(document.querySelectorAll("#langs button"),function(b){ b.classList.toggle("active", b.getAttribute("data-lang")===lang); });
   document.getElementById("resetBtn").textContent=L().reset;
+  document.getElementById("tourLabel").textContent=L().tourLabel;
+  document.getElementById("tNormal").textContent=money(CONFIG.tourPrice);
+  document.getElementById("tCamper").textContent=money(CONFIG.tourCamperPrice);
+  document.getElementById("tPP").textContent=L().tourPP;
+  document.getElementById("tDateLabel").textContent=L().tourDate;
+  document.getElementById("tTimeLabel").textContent=L().tourTime;
+  document.getElementById("tPaxLabel").textContent=L().tourPax;
+  document.getElementById("tNote").textContent=L().tourNote;
+  if(TOUR.on){ renderTourDates(); renderTourTimes(); }
   if(!checkIn && !checkOut) setPrompt(L().promptStart);
   else if(checkIn && !checkOut) setPrompt(L().promptEnd);
   else setPrompt(L().promptDone);
@@ -406,8 +516,12 @@ function applyLang(){
 
 document.getElementById("prev").onclick=()=>{view.setMonth(view.getMonth()-1);buildGrid();loadAvailability(view);};
 document.getElementById("next").onclick=()=>{view.setMonth(view.getMonth()+1);buildGrid();loadAvailability(view);};
-document.getElementById("pMinus").onclick=()=>{if(persons>1){persons--;document.getElementById("pCount").textContent=persons;updateSide();}};
-document.getElementById("pPlus").onclick=()=>{if(persons<12){persons++;document.getElementById("pCount").textContent=persons;updateSide();}};
+document.getElementById("pMinus").onclick=()=>{if(persons>1){persons--;document.getElementById("pCount").textContent=persons;updateSide();if(TOUR.on&&!TOUR.paxTouched)refreshTour();}};
+document.getElementById("pPlus").onclick=()=>{if(persons<12){persons++;document.getElementById("pCount").textContent=persons;updateSide();if(TOUR.on&&!TOUR.paxTouched)refreshTour();}};
+document.getElementById("tOpt").onchange=function(){ TOUR.on=this.checked; refreshTour(); updateSide(); };
+document.getElementById("tDate").onchange=function(){ TOUR.date=this.value; loadTourSlots(); };
+document.getElementById("tMinus").onclick=()=>{ if(TOUR.pax>1){ TOUR.pax--; TOUR.paxTouched=true; document.getElementById("tCount").textContent=TOUR.pax; loadTourSlots(); updateSide(); } };
+document.getElementById("tPlus").onclick=()=>{ if(TOUR.pax<25){ TOUR.pax++; TOUR.paxTouched=true; document.getElementById("tCount").textContent=TOUR.pax; loadTourSlots(); updateSide(); } };
 document.getElementById("resetBtn").onclick=resetSelection;
 document.getElementById("grid").addEventListener("mouseleave",()=>{ if(checkIn&&!checkOut){hoverDate=null;paintStates();} });
 Array.prototype.forEach.call(document.querySelectorAll("#langs button"),function(b){ b.onclick=function(){ lang=b.getAttribute("data-lang"); applyLang(); }; });
@@ -438,6 +552,7 @@ document.getElementById("payBtn").onclick=async ()=>{
   const naam=document.getElementById("gName").value.trim();
   const email=document.getElementById('gMail').value.trim();
   if(!naam || email.indexOf("@")<1){ setPrompt(L().fillNameEmail,true); return; }
+  if(TOUR.on && (!TOUR.time || !TOUR.date)){ setPrompt(L().tourPickTime,true); return; }
   const delen=naam.split(/\s+/); const voornaam=delen.shift()||naam; const achternaam=delen.join(" ");
   btn.disabled=true; btn.textContent=L().sending;
   try{
@@ -447,10 +562,12 @@ document.getElementById("payBtn").onclick=async ()=>{
     params.set("naam", naam); params.set("email", email); params.set("telefoon", "");
     params.set("personen", String(persons)); params.set("taal", lang);
     params.set("nieuwsbrief", document.getElementById("gOptin").checked ? "1" : "0");
+    if(TOUR.on && TOUR.time){ params.set("rondleiding","1"); params.set("tour_datum", TOUR.date); params.set("tour_tijd", TOUR.time); params.set("tour_pax", String(TOUR.pax)); }
     const res=await fetch(CONFIG.webhookUrl,{ method:"POST", body:params });
     const data=await res.json().catch(()=>({}));
     if(data && data.checkoutUrl){ redirect(data.checkoutUrl); return; }
-    if(data && data.error==="vol"){ setPrompt(L().errFull,true); } else { setPrompt(L().errPay,true); }
+    if(data && data.error==="tour_vol"){ setPrompt(L().errTourFull,true); loadTourSlots(); }
+    else if(data && data.error==="vol"){ setPrompt(L().errFull,true); } else { setPrompt(L().errPay,true); }
     btn.disabled=false; btn.textContent=oud;
   }catch(e){ setPrompt(L().errConn,true); btn.disabled=false; btn.textContent=oud; }
 };
@@ -459,6 +576,7 @@ if(WIJZIG.on){
   var _hf=function(id){ var el=document.getElementById(id); if(el){ var f=el.closest('.field'); if(f) f.style.display='none'; } };
   _hf('gName'); _hf('gMail');
   var _op=document.querySelector('.optin'); if(_op) _op.style.display='none';
+  var _tb=document.getElementById('tourBox'); if(_tb) _tb.style.display='none';
 }
 try{var _emb=false;try{_emb=(window.self!==window.top);}catch(e){_emb=true;}if(new URLSearchParams(location.search).get('embed')==='1')_emb=true;if(_emb){document.body.classList.add('embed');var _h=document.querySelector('.head');if(_h){var _cb=document.createElement('button');_cb.type='button';_cb.id='cpClose';_cb.setAttribute('aria-label','Sluiten');_cb.innerHTML='&times;';_h.appendChild(_cb);_cb.addEventListener('click',function(){try{(window.parent||window).postMessage('camper-close','*');}catch(e){}});}}}catch(e){}
 applyLang();
