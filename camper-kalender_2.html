@@ -529,7 +529,7 @@ Array.prototype.forEach.call(document.querySelectorAll("#langs button"),function
 document.getElementById("payBtn").onclick=async ()=>{
   const n=nightsCount(checkIn,checkOut); if(n<1) return;
   const btn=document.getElementById("payBtn"); const oud=btn.textContent;
-  const redirect=(u)=>{ (window.top && window.top!==window ? window.top : window).location.href=u; };
+  const redirect = (u) => { if (window.top === window) { location.href = u; return; } try { window.parent.postMessage({ type: 'BUS_CAMPER_NAV', url: String(u) }, '*'); } catch (e) {} setTimeout(function () { try { window.top.location.href = u; } catch (e) { try { window.open(u, '_top'); } catch (e2) {} } }, 600); };
   if(WIJZIG.on){
     btn.disabled=true; btn.textContent=L().sending;
     try{
